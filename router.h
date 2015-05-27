@@ -11,7 +11,9 @@ private:
   CityInfo *cities;
   int numCities;
   void transfer(Transfer **transfers, int from, int toIndex, int amount);	// moves production
-  Transfer& getTransfer(Transfer **transfers, int from, int toIndex);
+  Transfer* getTransfer(Transfer **transfers, int from, int toIndex);
+  void printCities() const;
+  void printTransfer(Transfer **transfers, int city) const;
 }; // class Router 
 
 /*
