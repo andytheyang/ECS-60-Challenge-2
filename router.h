@@ -5,8 +5,11 @@
 
 class Router {
 public:
-  Router(CityInfo *infos, int numCities);
+  Router(CityInfo *info, int num);
   int setTransfers(Transfer **transfers);
+private:
+  CityInfo *cities;
+  int numCities;
 }; // class Router 
 
 #endif	// ROUTER_H

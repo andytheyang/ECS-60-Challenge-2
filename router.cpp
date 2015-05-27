@@ -1,11 +1,18 @@
-// Author: Sean Davis
+// Author: Andy Yang and Manvinder Sodhi
 
 #include "router.h"
 #include "RouterRunner.h"
+#include <iostream>
 
-Router::Router(CityInfo *infos, int numCities) 
+using namespace std;
+
+Router::Router(CityInfo *info, int num) : cities(info), numCities(num)
 {
-  
+  for (int i = 0; i < numCities; i++)
+  {
+    cout << "City " << i << " nets " << cities[i].production - (cities + i)->usage << endl;
+//    (infos + i)->production = (infos + i)->usage;
+  }  // for all cities
   
 } // Router()
 
