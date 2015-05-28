@@ -2,7 +2,9 @@
 
 #include "router.h"
 #include "RouterRunner.h"
+#include "StackAr.h"
 #include <iostream>
+#include <algorithm>
 
 using namespace std;
 
@@ -15,13 +17,43 @@ Router::Router(CityInfo *info, int num) : cities(info), numCities(num)
 int Router::setTransfers(Transfer **transfers)
 {
   int numTransfer = 0;
+  StackAr<int> surplus(25000);
 
-  transfer(transfers, 0, 1, 1000);
-  printTransfer(transfers, 0);
+  for (int i = 0; i < numCities; i++)
+  {
+    if (getNet(i) > 0)
+      surplus.push(i);
+  }  // for all cities
+
+  while (!surplus.isEmpty())	// while there are more surplus cities
+  {
+    int current = surplus.topAndPop();
+//    cout << current << endl;
+    CityInfo *curCity = &(cities[current]);
+
+    // TODO: change <= to !=
+    for (int i = 0; i < curCity->adjCount && getNet(current) >= 0; i++)
+    {
+      if (getNet(curCity->adjList[i]) > 0)	// is a surplus
+        continue;
+
+      // transfer maximum possible
+      int transferAmount = min(getNet(current), -getNet(curCity->adjList[i]));
+      numTransfer += transferAmount;
+      transfer(transfers, current, i, transferAmount);
+      // TODO: implement multicity traversals
+    }  // for all adjacencies
+  }  // while
+
   return numTransfer;  // should be set to total of all transfers.
 }  // setTransfers
 
 // ---PRIVATE---
+
+int Router::getNet(int city) const
+{
+  return cities[city].production - cities[city].usage;
+}  // getNet()
 
 void Router::transfer(Transfer **transfers, int from, int toIndex, int amount)
 {
@@ -40,8 +72,7 @@ Transfer* Router::getTransfer(Transfer **transfers, int from, int toIndex)
   if (adj->destCity == 0 && adj->amount == 0)	// not initialized
   {
     adj->destCity = cities[from].adjList[toIndex];	// initialize
-    cout << "making new transfer to " << adj->destCity << endl;
-
+//    cout << "making new transfer to " << adj->destCity << endl;
   }
 
   return adj;
@@ -51,7 +82,7 @@ void Router::printCities() const
 {
   for (int i = 0; i < numCities; i++)
   {
-    cout << "City " << i << " nets " << cities[i].production - cities[i].usage << endl;
+    cout << "City " << i << " nets " << getNet(i) << endl;
   }  // for all cities
 }  // printCities()
 

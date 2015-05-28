@@ -10,6 +10,7 @@ public:
 private:
   CityInfo *cities;
   int numCities;
+  int getNet(int city) const;
   void transfer(Transfer **transfers, int from, int toIndex, int amount);	// moves production
   Transfer* getTransfer(Transfer **transfers, int from, int toIndex);
   void printCities() const;
