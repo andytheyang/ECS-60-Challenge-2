@@ -16,7 +16,19 @@ Router::Router(CityInfo *info, int num) : numCities(num)
   memcpy(cities, info, numCities * sizeof(CityInfo));
     // TODO: duplicate info??
 } // Router()
-
+/*
+int Router::setTransfers(Transfer **transfers)
+{
+  int curPath[25000][2];
+  curPath[0][0] = 0;
+  curPath[0][1] = 1;
+  curPath[1][0] = 1;
+  curPath[1][1] = 2;
+  transferPath(transfers, 0, curPath, 2, 100);
+  printTransfer(transfers, 0);
+  return 200;
+}
+*/
 
 int Router::setTransfers(Transfer **transfers)
 {
@@ -39,10 +51,11 @@ int Router::setTransfers(Transfer **transfers)
     CityInfo current = cities[currentParent];
     int currentNum = currentParent;
     adjQ.makeEmpty();
-    
+    pathLength = 0;
+
     do
     {
-      for (int i = 0; getNet(current) > 0 && i < current.adjCount; i++)
+      for (int i = 0; getNet(currentParent) > 0 && i < current.adjCount; i++)
       {
         if (visited[current.adjList[i]])
           continue;
@@ -50,7 +63,8 @@ int Router::setTransfers(Transfer **transfers)
         curPath[pathLength][0] = i;
         curPath[pathLength][1] = current.adjList[i];
         pathLength++;
-        int transferAmount = min(getNet(current), -getNet(current.adjList[i]));
+        int transferAmount = min(getNet(currentParent), -getNet(current.adjList[i]));
+        cout << transferAmount << endl;
         numTransfer += transferAmount * pathLength;	// TODO: check this
         transferPath(transfers, currentParent, curPath, pathLength, transferAmount);
         adjQ.enqueue(i);
@@ -62,51 +76,15 @@ int Router::setTransfers(Transfer **transfers)
 
       visited[currentNum] = 1;
 
-      int next = adjQ.dequeue();
-      currentNum = current.adjList[next];
+      int nextIndex = adjQ.dequeue();
+      currentNum = current.adjList[nextIndex];
       current = cities[currentNum];
+
+      curPath[pathLength][0] = nextIndex;
+      curPath[pathLength][1] = currentNum;
+      pathLength++;
     } while (true);  // while there are more adjacencies
   }  // while more surplus cities
-/*    
-    while (!surplus.isEmpty())	// while there are more surplus cities
-    {
-        int current = surplus.topAndPop();
-        //    cout << current << endl;
-        CityInfo *curCity = &(cities[current]);
-        
-        // TODO: change <= to !=
-        for (int i = 0; i < curCity->adjCount && getNet(current) >= 0; i++)
-        {
-            if (getNet(curCity->adjList[i]) > 0)	// is a surplus
-                continue;
-
-            // transfer maximum possible
-            int transferAmount = min(getNet(current), -getNet(curCity->adjList[i]));
-            numTransfer += transferAmount;
-            transfer(transfers, current, i, transferAmount);
-            // TODO: implement multicity traversals
-        }  // for all adjacencies
-    }  // while
-*/
-
-/*
-  while (!surplus.isEmpty())
-  {
-    CityInfo current = cities[surplus.topAndPop()];
-    CityInfo currentParent = current;
-    adjQ.makeEmpty();
-
-    do
-    {
-      for(int i = 0; getNet(currentParent) > 0 && i < current.adjCount; i++)
-      {
-        path.push(i);
-        // try to push power along path
-      }  // for each adjacency
-    } while (!adjQ.isEmpty());
-
-  }  // while there are more surplus cities
-*/
   return numTransfer;  // should be set to total of all transfers.
 }  // setTransfers
 
@@ -136,7 +114,7 @@ void Router::transferPath(Transfer **transfers, int parent, int curPath[25000][2
   for (int i = 0; i < pathLength; i++)
   {
     transfer(transfers, parent, curPath[i][0], amount);
-    parent = curPath[i][0];
+    parent = curPath[i][1];
   }
 }  // transferPath()
 
