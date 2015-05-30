@@ -5,7 +5,7 @@
 #include "StackAr.h"
 #include "QueueAr.h"
 #include <iostream>
-#include <algorithm>
+//#include <algorithm>
 #include <cstring>
 
 using namespace std;
@@ -57,7 +57,7 @@ int Router::setTransfers(Transfer **transfers)
     {
       for (int i = 0; getNet(currentParent) > 0 && i < current.adjCount; i++)
       {
-        if (visited[current.adjList[i]])
+        if (visited[current.adjList[i]] || getNet(current.adjList[i]) > 0)
           continue;
 
         curPath[pathLength][0] = i;
@@ -149,3 +149,11 @@ void Router::printTransfer(Transfer **transfers, int city) const
         cout << "From city " << city << " to " << cityTrans[i].destCity << ": " << cityTrans[i].amount << endl;
     }  // for all adjacencies
 }  // printTransfer()
+/*
+int min(int a, int b)
+{
+  if (a > b)
+    return a;
+  return b;
+}
+*/
