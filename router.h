@@ -15,7 +15,7 @@ private:
   int getNet(int city) const;
   int getNet(CityInfo city) const;
   void transfer(Transfer **transfers, int from, int toIndex, int amount);	// moves production
-  void transferPath(Transfer **transfers, int parent, int **curPath, int pathLength, int amount);
+  void transferPath(Transfer **transfers, int parent, int curPath[25000][2], int pathLength, int amount);
   Transfer* getTransfer(Transfer **transfers, int from, int toIndex);
   void printCities() const;
   void printTransfer(Transfer **transfers, int city) const;

@@ -32,6 +32,41 @@ int Router::setTransfers(Transfer **transfers)
         if (getNet(i) > 0)
             surplus.push(i);
     }  // for all cities
+
+  while (!surplus.isEmpty())
+  {
+    int currentParent = surplus.topAndPop();
+    CityInfo current = cities[currentParent];
+    int currentNum = currentParent;
+    adjQ.makeEmpty();
+    
+    do
+    {
+      for (int i = 0; getNet(current) > 0 && i < current.adjCount; i++)
+      {
+        if (visited[current.adjList[i]])
+          continue;
+
+        curPath[pathLength][0] = i;
+        curPath[pathLength][1] = current.adjList[i];
+        pathLength++;
+        int transferAmount = min(getNet(current), -getNet(current.adjList[i]));
+        numTransfer += transferAmount * pathLength;	// TODO: check this
+        transferPath(transfers, currentParent, curPath, pathLength, transferAmount);
+        adjQ.enqueue(i);
+        pathLength--;
+      }  // for each adjacency
+
+      if (adjQ.isEmpty() || getNet(current) <= 0)
+        break;
+
+      visited[currentNum] = 1;
+
+      int next = adjQ.dequeue();
+      currentNum = current.adjList[next];
+      current = cities[currentNum];
+    } while (true);  // while there are more adjacencies
+  }  // while more surplus cities
 /*    
     while (!surplus.isEmpty())	// while there are more surplus cities
     {
@@ -96,7 +131,7 @@ void Router::transfer(Transfer **transfers, int from, int toIndex, int amount)
     cities[cities[from].adjList[toIndex]].production += amount;
 }  // transfer()
 
-void Router::transferPath(Transfer **transfers, int parent, int **curPath, int pathLength, int amount)
+void Router::transferPath(Transfer **transfers, int parent, int curPath[25000][2], int pathLength, int amount)
 {
   for (int i = 0; i < pathLength; i++)
   {
