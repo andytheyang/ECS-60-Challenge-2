@@ -2,6 +2,8 @@
 #define	ROUTER_H
 
 #include "RouterRunner.h"
+#include "StackAr.h"
+#include <cstring>
 
 class Router {
 public:
@@ -11,33 +13,13 @@ private:
   CityInfo *cities;
   int numCities;
   int getNet(int city) const;
+  int getNet(CityInfo city) const;
   void transfer(Transfer **transfers, int from, int toIndex, int amount);	// moves production
+  void transferPath(Transfer **transfers, int parent, int **curPath, int pathLength, int amount);
   Transfer* getTransfer(Transfer **transfers, int from, int toIndex);
   void printCities() const;
   void printTransfer(Transfer **transfers, int city) const;
 }; // class Router 
-
-/*
-class City {
-public:
-  City();
-  void setData(int *aList, short aCount, int use, int prod)
-  {
-    for (int i = 0; i < 8; i++)
-    {
-      adjList[i] = aList[i];
-    }
-
-    adjCount = (int)aCount;
-    usage = use;
-    production = prod;
-  }
-  int adjList[8];
-  int adjCount;		// don't deal with data types
-  int usage;
-  int production;
-};  // class City
-*/
 
 #endif	// ROUTER_H
 
