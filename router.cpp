@@ -35,7 +35,7 @@ int Router::setTransfers(Transfer **transfers)
   int numTransfer = 0;
   int visited[25000] = {0};
   int levels[25000] = {0};
-  int paths[25000][25][2];
+  int paths[25000][40][2];
 //    int level = 0;	// for level-order traversal
   int curPath[25][2];
   int pathLength = 0;
@@ -71,7 +71,7 @@ int Router::setTransfers(Transfer **transfers)
         int process = current.adjList[i];
         if (visited[process])
           continue;
-        cout << "processing " << process << endl;
+//        cout << "processing " << process << endl;
 
         curPath[pathLength][0] = i;
         curPath[pathLength][1] = process;
@@ -102,11 +102,6 @@ int Router::setTransfers(Transfer **transfers)
       }  // for each adjacency
 
 //      visited[currentNum] = 1;
-
-      if (adjQ.isEmpty())
-        cout << "adjQ empty" << endl;
-      if (getNet(currentParent) <= 0)
-        cout << "exiting with " << getNet(currentParent) << " left" << endl;
 
       if (adjQ.isEmpty() || getNet(currentParent) <= 0)
         break;
@@ -154,14 +149,14 @@ int Router::getNet(CityInfo city) const
 
 void Router::transfer(Transfer **transfers, int from, int toIndex, int amount)
 {
-    Transfer *trans = getTransfer(transfers, from, toIndex);
-    trans->amount = amount;
-    // optimize by storing cities[from] first
-    cities[from].production -= amount;
-    cities[cities[from].adjList[toIndex]].production += amount;
+  Transfer *trans = getTransfer(transfers, from, toIndex);
+  trans->amount += amount;
+  // optimize by storing cities[from] first
+  cities[from].production -= amount;
+  cities[cities[from].adjList[toIndex]].production += amount;
 }  // transfer()
 
-void Router::transferPath(Transfer **transfers, int parent, int curPath[25][2], int pathLength, int amount)
+void Router::transferPath(Transfer **transfers, int parent, int curPath[50][2], int pathLength, int amount)
 {
 //  cout << "transferring " << parent << " to " << curPath[pathLength - 1][1] << ": " << amount << endl;
   for (int i = 0; i < pathLength; i++)
@@ -177,7 +172,7 @@ Transfer* Router::getTransfer(Transfer **transfers, int from, int toIndex)
   Transfer *adj = &(transfers[from][toIndex]);
 //  if (adj->destCity == 0 && adj->amount == 0)	// not initialized
 //  {
-    adj->destCity = cities[from].adjList[toIndex];	// initialize
+  adj->destCity = cities[from].adjList[toIndex];	// initialize
 //    cout << "making new transfer to " << adj->destCity << endl;
 //  }
   return adj;
