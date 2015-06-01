@@ -34,6 +34,9 @@ int Router::setTransfers(Transfer **transfers)
 {
     int numTransfer = 0;
     int visited[25000] = {0};
+    int levels[25000] = {0};
+    int paths[25000][25][2];
+//    int level = 0;	// for level-order traversal
     int curPath[25000][2];
     int pathLength = 0;
     StackAr<int> surplus(25000);
@@ -48,10 +51,12 @@ int Router::setTransfers(Transfer **transfers)
   while (!surplus.isEmpty())
   {
     int currentParent = surplus.topAndPop();
+    cout << currentParent << endl;
     CityInfo current = cities[currentParent];
     int currentNum = currentParent;
     adjQ.makeEmpty();
     pathLength = 0;
+
 
     do
     {
@@ -63,12 +68,18 @@ int Router::setTransfers(Transfer **transfers)
         curPath[pathLength][0] = i;
         curPath[pathLength][1] = current.adjList[i];
         pathLength++;
+        levels[current.adjList[i]] = pathLength;
+	for (int j = 0; j < pathLength; j++)
+        {
+           paths[current.adjList[i]][j][0] = curPath[j][0];
+           paths[current.adjList[i]][j][1] = curPath[j][1];
+        }
         int transferAmount = min(getNet(currentParent), -getNet(current.adjList[i]));
-        cout << transferAmount << endl;
+//        cout << transferAmount << endl;
         numTransfer += transferAmount * pathLength;	// TODO: check this
         transferPath(transfers, currentParent, curPath, pathLength, transferAmount);
         adjQ.enqueue(i);
-        pathLength--;
+        pathLength--;	// remove last node from path
       }  // for each adjacency
 
       if (adjQ.isEmpty() || getNet(current) <= 0)
@@ -80,11 +91,20 @@ int Router::setTransfers(Transfer **transfers)
       currentNum = current.adjList[nextIndex];
       current = cities[currentNum];
 
-      curPath[pathLength][0] = nextIndex;
-      curPath[pathLength][1] = currentNum;
-      pathLength++;
+      pathLength = levels[currentNum];
+      for (int i = 0; i < pathLength; i++)
+      {
+        curPath[i][0] = paths[currentNum][i][0];
+	curPath[i][1] = paths[currentNum][i][1];
+      }
+
+//      curPath[pathLength][0] = nextIndex;	// add dequeued item to the path stack
+//      curPath[pathLength][1] = currentNum;
+//      pathLength++;
     } while (true);  // while there are more adjacencies
   }  // while more surplus cities
+
+  // TODO: recalculate numTransfer
   return numTransfer;  // should be set to total of all transfers.
 }  // setTransfers
 
@@ -111,6 +131,7 @@ void Router::transfer(Transfer **transfers, int from, int toIndex, int amount)
 
 void Router::transferPath(Transfer **transfers, int parent, int curPath[25000][2], int pathLength, int amount)
 {
+  cout << "transferring " << parent << " to " << curPath[pathLength - 1][1] << endl;
   for (int i = 0; i < pathLength; i++)
   {
     transfer(transfers, parent, curPath[i][0], amount);
