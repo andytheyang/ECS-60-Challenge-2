@@ -5,7 +5,7 @@
 #include "StackAr.h"
 #include <cstring>
 
-const int MAX_PATH = 100;
+const int MAX_PATH = 1000;
 
 class Router {
 public:
@@ -14,11 +14,14 @@ public:
 private:
   CityInfo *cities;
   int numCities;
+  int curPath[MAX_PATH][2];
   int getNet(int city) const;
   int getNet(CityInfo city) const;
   void transfer(Transfer **transfers, int from, int toIndex, int amount);	// moves production
-  void transferPath(Transfer **transfers, int parent, int curPath[MAX_PATH][2], int pathLength, int amount);
+//  void transferPath(Transfer **transfers, int parent, int curPath[MAX_PATH][2], int pathLength, int amount);
+  void transferPath(Transfer **transfers, int parent, int pathLength, int amount);
   Transfer* getTransfer(Transfer **transfers, int from, int toIndex);
+  void primeTransfers(Transfer **transfers);
   void printCities() const;
   void printTransfer(Transfer **transfers, int city) const;
   void printCurPath(int curPath[MAX_PATH][2], int pathLength) const;

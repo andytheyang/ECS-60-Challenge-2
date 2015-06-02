@@ -1,0 +1,21 @@
+This is a run of p5 with a 2 minute limit on the time allowed per run.
+I  will look at the results tomorrow, and see if any that didn't complete before do now.
+Scores from p5 for Yang,Andy
+Sodhi,Manvinder
+Addresses used: achyang@ucdavis.edu mssodhi@ucdavis.edu 
+
+Makefile optimization check: 
+OK
+STL check:
+OK
+Testing power25000_9.csv:
+Transfer total: 185111664 CPU Time: 2.60592
+Testing power25000_10.csv:
+Transfer total: 131838480 CPU Time: 0.863235
+Testing power25000_11.csv:
+Transfer total: 150421525 CPU Time: 1.48658
+
+Total CPU Time: Yours 1.48658  Sean's: 0.48831 so your score is 9
+Total Size Score:  Yours 150421525  Sean's: 134903798 so your score is 23
+
+Total score: 9 + 23 = 32

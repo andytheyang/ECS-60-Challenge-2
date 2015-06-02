@@ -6,7 +6,6 @@
 #include "QueueAr.h"
 #include <iostream>
 #include <cassert>
-//#include <algorithm>
 #include <cstring>
 
 using namespace std;
@@ -17,19 +16,6 @@ Router::Router(CityInfo *info, int num) : numCities(num)
   memcpy(cities, info, numCities * sizeof(CityInfo));
     // TODO: duplicate info??
 } // Router()
-/*
-int Router::setTransfers(Transfer **transfers)
-{
-  int curPath[25000][2];
-  curPath[0][0] = 0;
-  curPath[0][1] = 1;
-  curPath[1][0] = 1;
-  curPath[1][1] = 2;
-  transferPath(transfers, 0, curPath, 2, 100);
-  printTransfer(transfers, 0);
-  return 200;
-}
-*/
 
 int Router::setTransfers(Transfer **transfers)
 {
@@ -37,45 +23,35 @@ int Router::setTransfers(Transfer **transfers)
   int visited[25000] = {0};
   int levels[25000] = {0};
   int parents[25000][2];
-  int curPath[MAX_PATH][2];
   int pathLength = 0;
   StackAr<int> surplus(25000);
   Queue<int> adjQ(1000);
+  primeTransfers(transfers);
 
   for (int i = 0; i < numCities; i++)
   {
     if (getNet(i) > 0)
       surplus.push(i);
-//    cout << i << " nets " << getNet(i) << endl;
   }  // for all cities
 
-//  int flag = 0;
+  int flag = 0;
   while (!surplus.isEmpty())
   {
-//    flag++;
+    flag++;
     int currentParent = surplus.topAndPop();
     CityInfo current = cities[currentParent];
     int currentNum = currentParent;
     adjQ.makeEmpty();
     pathLength = 0;
 
-    for (int i = 0; i < 25000; i++)
-    {
-      visited[i] = 0;
-    }
-
-//    memset(visited, 0, sizeof(visited));
     do
     {
       for (int i = 0; getNet(currentParent) > 0 && i < current.adjCount; i++)
       {
         int process = current.adjList[i];
-        if (visited[process])
-        {
-          if (visited[process] != 1)
-            cout << visited[process] << endl;;
+
+        if (visited[process] == flag)
           continue;
-        }
 
         curPath[pathLength][0] = i;
         curPath[pathLength][1] = process;
@@ -85,25 +61,19 @@ int Router::setTransfers(Transfer **transfers)
         parents[process][1] = currentNum;	// store parent to parents storage (for backward traversal)
         levels[process] = pathLength;		// store pathLength into levels storage for later generation of path
 
-//        assert(pathLength < MAX_PATH);
-/*
-	for (int j = 0; j < pathLength; j++)
-        {
-           paths[process][j][0] = curPath[j][0];
-           paths[process][j][1] = curPath[j][1];
-        }
-*/
-        int transferAmount = min(getNet(currentParent), -getNet(process));
+
         adjQ.enqueue(process);	// store city location
-        visited[process] = 1;	// lazy flagging
+        visited[process] = flag;	// lazy flagging
+        int transferAmount = min(getNet(currentParent), -getNet(process));
 
         if (transferAmount <= 0)
         {
           pathLength--;
           continue;
         }
+
         numTransfer += transferAmount * pathLength;	// TODO: check this
-        transferPath(transfers, currentParent, curPath, pathLength, transferAmount);
+        transferPath(transfers, currentParent, pathLength, transferAmount);
         pathLength--;	// remove last node from path
       }  // for each adjacency
 
@@ -112,18 +82,14 @@ int Router::setTransfers(Transfer **transfers)
 
       currentNum = adjQ.dequeue();
       current = cities[currentNum];
-
       pathLength = levels[currentNum];
 
-      // TODO: fix this
       int tempCur = currentNum;
-      int par;
       for (int i = pathLength - 1; i >= 0; i--)
       {
-        par = parents[tempCur][1];
         curPath[i][1] = tempCur;
         curPath[i][0] = parents[tempCur][0];
-        tempCur = par;
+        tempCur = parents[tempCur][1];
       }
     } while (true);  // while there are more adjacencies
   }  // while more surplus cities
@@ -153,7 +119,7 @@ void Router::transfer(Transfer **transfers, int from, int toIndex, int amount)
   cities[cities[from].adjList[toIndex]].production += amount;
 }  // transfer()
 
-void Router::transferPath(Transfer **transfers, int parent, int curPath[MAX_PATH][2], int pathLength, int amount)
+void Router::transferPath(Transfer **transfers, int parent, int pathLength, int amount)
 {
 //  cout << "transferring " << parent << " to " << curPath[pathLength - 1][1] << ": " << amount << endl;
   for (int i = 0; i < pathLength; i++)
@@ -165,15 +131,18 @@ void Router::transferPath(Transfer **transfers, int parent, int curPath[MAX_PATH
 
 Transfer* Router::getTransfer(Transfer **transfers, int from, int toIndex)
 {
-    // TODO: static?
-  Transfer *adj = &(transfers[from][toIndex]);
-//  if (adj->destCity == 0 && adj->amount == 0)	// not initialized
-//  {
-  adj->destCity = cities[from].adjList[toIndex];	// initialize
-//    cout << "making new transfer to " << adj->destCity << endl;
-//  }
-  return adj;
+//  Transfer *adj = &(transfers[from][toIndex]);
+//  adj->destCity = cities[from].adjList[toIndex];	// initialize
+  return &(transfers[from][toIndex]);
+//  return adj;
 }  // getTransfer()
+
+void Router::primeTransfers(Transfer **transfers)
+{
+  for (int i = 0; i < numCities; i++)
+    for (int j = 0; j < cities[i].adjCount; j++)
+      getTransfer(transfers, i, j)->destCity = cities[i].adjList[j];
+}
 
 void Router::printCities() const
 {
