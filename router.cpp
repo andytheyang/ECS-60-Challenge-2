@@ -5,6 +5,7 @@
 #include "StackAr.h"
 #include "QueueAr.h"
 #include <iostream>
+#include <cassert>
 //#include <algorithm>
 #include <cstring>
 
@@ -35,9 +36,10 @@ int Router::setTransfers(Transfer **transfers)
   int numTransfer = 0;
   int visited[25000] = {0};
   int levels[25000] = {0};
-  int paths[25000][40][2];
+//  int paths[25000][MAX_PATH][2];
+  int parents[25000][2];
 //    int level = 0;	// for level-order traversal
-  int curPath[25][2];
+  int curPath[MAX_PATH][2];
   int pathLength = 0;
   StackAr<int> surplus(25000);
   Queue<int> adjQ(1000);
@@ -48,6 +50,13 @@ int Router::setTransfers(Transfer **transfers)
       surplus.push(i);
 //    cout << i << " nets " << getNet(i) << endl;
   }  // for all cities
+
+/*  for (int i = 0; i < 25000; i++)
+  {
+    parents[i][0] = -1;
+    parents[i][1] = -1;
+  }
+*/
 
   while (!surplus.isEmpty())
   {
@@ -77,14 +86,17 @@ int Router::setTransfers(Transfer **transfers)
         curPath[pathLength][1] = process;
         pathLength++;
 
-        levels[process] = pathLength;
-
+        parents[process][0] = i;		// store toIndex into parents storage (for forward traversal)
+        parents[process][1] = currentNum;	// store parent to parents storage (for backward traversal)
+        levels[process] = pathLength;		// store pathLength into levels storage for later generation of path
+//        assert(pathLength < MAX_PATH);
+/*
 	for (int j = 0; j < pathLength; j++)
         {
            paths[process][j][0] = curPath[j][0];
            paths[process][j][1] = curPath[j][1];
         }
-
+*/
         int transferAmount = min(getNet(currentParent), -getNet(process));
         adjQ.enqueue(process);	// store city location
         visited[process] = 1;
@@ -115,12 +127,24 @@ int Router::setTransfers(Transfer **transfers)
       current = cities[currentNum];
 
       pathLength = levels[currentNum];
-      for (int i = 0; i < pathLength; i++)
+
+      // TODO: fix this
+      int tempCur = currentNum;
+      int par;
+      for (int i = pathLength - 1; i >= 0; i--)
+      {
+        par = parents[tempCur][1];
+        curPath[i][1] = tempCur;
+        curPath[i][0] = parents[tempCur][0];
+        tempCur = par;
+      }
+//      printCurPath(curPath, pathLength);
+/*      for (int i = 0; i < pathLength; i++)
       {
         curPath[i][0] = paths[currentNum][i][0];
 	curPath[i][1] = paths[currentNum][i][1];
       }
-
+*/
 //      curPath[pathLength][0] = nextIndex;	// add dequeued item to the path stack
 //      curPath[pathLength][1] = currentNum;
 //      pathLength++;
@@ -156,7 +180,7 @@ void Router::transfer(Transfer **transfers, int from, int toIndex, int amount)
   cities[cities[from].adjList[toIndex]].production += amount;
 }  // transfer()
 
-void Router::transferPath(Transfer **transfers, int parent, int curPath[50][2], int pathLength, int amount)
+void Router::transferPath(Transfer **transfers, int parent, int curPath[MAX_PATH][2], int pathLength, int amount)
 {
 //  cout << "transferring " << parent << " to " << curPath[pathLength - 1][1] << ": " << amount << endl;
   for (int i = 0; i < pathLength; i++)
@@ -189,12 +213,23 @@ void Router::printCities() const
 
 void Router::printTransfer(Transfer **transfers, int city) const
 {
-    Transfer *cityTrans = transfers[city];
-    for (int i = 0; i < 8; i++)
-    {
-        cout << "From city " << city << " to " << cityTrans[i].destCity << ": " << cityTrans[i].amount << endl;
-    }  // for all adjacencies
+  Transfer *cityTrans = transfers[city];
+  for (int i = 0; i < 8; i++)
+  {
+      cout << "From city " << city << " to " << cityTrans[i].destCity << ": " << cityTrans[i].amount << endl;
+  }  // for all adjacencies
 }  // printTransfer()
+
+void Router::printCurPath(int curPath[MAX_PATH][2], int pathLength) const
+{
+  int current = curPath[0][1];
+  for (int i = 0; i < pathLength; i++)
+  {
+    cout << "Connecting " << current << " to " << cities[current].adjList[curPath[i][0]] << endl;
+    current = cities[current].adjList[curPath[i][0]];
+  }  // for all elements in path
+
+}  // printCurPath()
 /*
 int min(int a, int b)
 {
