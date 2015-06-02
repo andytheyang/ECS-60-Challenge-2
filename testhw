@@ -1,0 +1,163 @@
+#! /bin/bash
+
+executableName=router.out
+maxSleep=120     # 2 minutes
+tooLong=0
+errorCount=0
+MakefileScore=0
+
+echo $1
+testerDirectory="/home/ssdavis/60/p5/Testing"
+
+if [ $# -ne 1 ]; then
+  echo "usage testhw: testhw source_directory" 1>&2
+  exit
+fi
+
+if [[ $1 =~ Testing ]]; then # Use from this directory is not allowed
+  echo "You may not use Testing as your own source directory!"  1>&2
+  exit
+fi
+
+cd $1
+rm -f *.out *.o  core* CPUTimer* results* RouterRunner.* power25000* &> /dev/null
+cp  $testerDirectory/* . 
+
+
+if [ -e authors.txt ]; then
+  dos2unix authors.txt &> /dev/null
+  awk 'NR < 3 {for (i = 2; i <= NF; ++i) printf"%s", $i; printf"\n";}' authors.txt > names.txt
+  awk {'printf"%s ", $1'} authors.txt > addresses
+else
+  echo  "You need to create an authors.txt file!!!! No one will receive credit for this assignment."  >> results.txt
+  echo "Handin only authors.txt, and then e-mail Sean." >> results.txt
+  echo "Please use the correct format on each line: e-mail_address last_name,first_name" >> results.txt
+  echo "$1@ucdavis.edu" > addresses
+  finger ${PWD##*/} | awk 'NR == 1 {printf"%s,%s", $5, $4}' > names.txt
+  mailx -s "ECS 60 P5 Test Results" `cat addresses` < results.txt
+  exit
+fi
+
+echo "This is a run of p5 with a 2 minute limit on the time allowed per run."  >> results.txt
+echo "I  will look at the results tomorrow, and see if any that didn't complete before do now." >> results.txt
+
+echo -n "Scores from p5 for " >> results.txt
+cat names.txt >> results.txt
+
+echo -n "Addresses used: " >> results.txt
+cat addresses >> results.txt
+echo -e "\n" >> results.txt
+
+if [ -e *akefile ]; then
+  echo "Makefile optimization check: " >> results.txt
+  cat *akefile* | grep O > temp
+  if [ -s temp ]; then
+    (( errorCount++ ))
+    cat  temp >> results.txt
+    echo "Optimization flag found in Makefile so zero for assignment." >> results.txt
+  else
+    echo "OK" >> results.txt
+  fi
+else
+ echo "No Makefile found so using default, -1 from total." >> results.txt
+ echo "If your code doesn't work with that Makefile, then handin only a Makefile, and e-mail Sean." >> results.txt
+ cp  $testerDirectory/Makefile .
+ MakefileScore=-1
+fi
+ 
+echo "STL check:" >> results.txt 
+egrep "< *(vector|list|queue|deque|map|set|stack|priority_queue|forward_list|unordered_set|unordered_set|array|algorithm) *>" *.cpp *.h > temp
+
+if [ -s temp ]; then
+  (( errorCount++ ))
+  cat temp >> results.txt 
+  echo "STL header found in file(s), so zero for assignment." >> results.txt
+else
+  echo "OK" >> results.txt
+fi
+
+make &> /dev/null
+
+if [ -s $executableName ]; then
+  fileNum=9
+  while [[ $fileNum -lt 12 ]]; do
+    echo "$fileNum:"
+    echo "Testing power25000_$fileNum.csv:" >> results.txt
+    ($executableName $testerDirectory/power25000_$fileNum.csv | tail | tee totalTemp  > temp)&
+    count=0 
+
+    while [[ $count -lt $maxSleep ]]; do
+      sleep 1
+      (( count += 1 ))
+      ps | grep $executableName > temp2
+
+      if [ ! -s temp2 ]; then
+        break
+      fi
+    done
+
+    pkill $executableName &> /dev/null
+    rm core &> /dev/null
+
+    if [ ! -s temp ]; then
+      echo "$executableName did not finish in 2 minutes so you will receive a zero." >> results.txt
+      (( tooLong++ ))
+    else 
+      cat temp >> results.txt
+      lineCount=$( cat temp | wc -l )
+
+      if [ $lineCount -gt 1 ]; then
+        echo "Errors found, so zero for assignment." >> results.txt 
+        (( errorCount++ ))
+      fi # if more than one line in temp
+    fi #if temp not created so didn't finish
+
+    fileNum=$((fileNum + 1))
+  done # while fileNum < 12
+
+  cat totalTemp | awk '/CPU/ {CPU += $6; size += $3 } END {print CPU, int(25 * .48831 / CPU + 0.9), size, int(25 * 134903798 / size + 0.9)}' > scores.txt
+  CPUTime=$( awk '{print $1}' scores.txt )
+  TotalSize=$( awk '{print $3}' scores.txt  )  
+  CPUScore=$( awk '{print $2}' scores.txt )
+  SizeScore=$( awk '{print $4}' scores.txt )
+
+  if [[ $CPUScore -gt 30 ]]; then
+    CPUScore=30
+  fi
+
+  if [[ $SizeScore -gt 30 ]]; then
+    SizeScore=30
+  fi
+ 
+   echo -e "\nTotal CPU Time: Yours $CPUTime  Sean's: 0.48831 so your score is $CPUScore"  >> results.txt
+   echo -e "Total Size Score:  Yours $TotalSize  Sean's: 134903798 so your score is $SizeScore\n" >> results.txt
+
+  if [[ $tooLong -gt 0 ]]; then
+    echo 'Total Score: Zero because it did not complete in time.'  >> results.txt
+    finalScore=0
+  else
+    if [[ $errorCount -gt 0 ]]; then
+      echo 'Total Score: Zero because there were errors found while running.' >> results.txt
+      finalScore=0
+    else # everything OK
+      finalScore=$(( $CPUScore + $SizeScore ))
+      echo "Total score: $CPUScore + $SizeScore = $finalScore" >> results.txt
+    fi # if errors
+  fi # if too long 
+else
+  echo "$executableName was not created by make, so zero for assignment." >> results.txt
+fi
+
+
+#mailx -s "ECS 60 P5 Test Results" `cat addresses` < results.txt
+
+
+#awk 'NR == 1 {printf"%s,", $0}' names.txt >> ../results.csv
+#echo " ${1%%/}, $finalScore,$errorCount,$tooLong,$CPUScore,$SizeScore" >> ../results.csv
+#authorCount=$(grep "@" authors.txt | wc -l)
+
+#if [ $authorCount -gt 1 ]; then
+#  awk 'NR == 2 {printf"%s,", $0}' names.txt >> ../results.csv
+#  echo "${1%%/},$finalScore,$errorCount,$tooLong,$CPUScore,$SizeScore" >> ../results.csv
+#fi
+
