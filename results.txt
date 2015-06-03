@@ -9,13 +9,13 @@ OK
 STL check:
 OK
 Testing power25000_9.csv:
-Transfer total: 185025694 CPU Time: 0.55961
+Transfer total: 185025694 CPU Time: 0.610037
 Testing power25000_10.csv:
-Transfer total: 128762327 CPU Time: 0.196511
+Transfer total: 128762327 CPU Time: 0.210291
 Testing power25000_11.csv:
-Transfer total: 152307208 CPU Time: 0.386742
+Transfer total: 152307208 CPU Time: 0.420201
 
-Total CPU Time: Yours 0.386742  Sean's: 0.48831 so your score is 30
+Total CPU Time: Yours 0.420201  Sean's: 0.48831 so your score is 29
 Total Size Score:  Yours 152307208  Sean's: 134903798 so your score is 23
 
-Total score: 30 + 23 = 53
+Total score: 29 + 23 = 52

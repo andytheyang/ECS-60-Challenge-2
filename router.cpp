@@ -2,7 +2,6 @@
 
 #include "router.h"
 #include "RouterRunner.h"
-#include "StackAr.h"
 #include "QueueAr.h"
 #include <iostream>
 #include <cassert>
@@ -23,7 +22,7 @@ int Router::setTransfers(Transfer **transfers)
   memset(visited, 0, numCities * sizeof(int));
 //  int levels[numCities];
 //  int pathLength = 0;
-  Queue<int> surplus(numCities);
+//  StackAr<int> surplus(numCities);
   Queue<int> adjQ(numCities);	// approximate pathlength
   primeTransfers(transfers);
 /*
@@ -33,14 +32,14 @@ int Router::setTransfers(Transfer **transfers)
       surplus.enqueue(i);
   }  // for all cities
 */
-  int flag = 0;
 //  while (!surplus.isEmpty())
 //  {
+  int flag = 0;
   for (int currentParent = 0; currentParent < numCities; currentParent++)	// loop until is a surplus, then execute for code
   {
+    flag++;
     if (getNet(currentParent) <= 0)
       continue;
-    flag++;
 //    int currentParent = surplus.dequeue();
     CityInfo current = cities[currentParent];
     int currentNum = currentParent;
@@ -178,9 +177,7 @@ int Router::getNumTransfer(Transfer **transfers)
 void Router::printCities() const
 {
     for (int i = 0; i < numCities; i++)
-    {
         cout << "City " << i << " nets " << getNet(i) << endl;
-    }  // for all cities
 }  // printCities()
 
 
@@ -188,11 +185,10 @@ void Router::printTransfer(Transfer **transfers, int city) const
 {
   Transfer *cityTrans = transfers[city];
   for (int i = 0; i < 8; i++)
-  {
       cout << "From city " << city << " to " << cityTrans[i].destCity << ": " << cityTrans[i].amount << endl;
-  }  // for all adjacencies
 }  // printTransfer()
 
+/*
 void Router::printCurPath(int curPath[MAX_PATH][2], int pathLength) const
 {
   int current = curPath[0][1];
@@ -203,6 +199,7 @@ void Router::printCurPath(int curPath[MAX_PATH][2], int pathLength) const
   }  // for all elements in path
 
 }  // printCurPath()
+*/
 /*
 int min(int a, int b)
 {

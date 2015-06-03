@@ -2,10 +2,7 @@
 #define	ROUTER_H
 
 #include "RouterRunner.h"
-#include "StackAr.h"
 #include <cstring>
-
-const int MAX_PATH = 1000;
 
 class Router {
 public:
@@ -26,7 +23,7 @@ private:
   int getNumTransfer(Transfer **transfers);
   void printCities() const;
   void printTransfer(Transfer **transfers, int city) const;
-  void printCurPath(int curPath[MAX_PATH][2], int pathLength) const;
+//  void printCurPath(int curPath[MAX_PATH][2], int pathLength) const;
 }; // class Router 
 
 #endif	// ROUTER_H
