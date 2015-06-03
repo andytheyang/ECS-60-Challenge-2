@@ -18,7 +18,7 @@ Router::Router(CityInfo *info, int num) : numCities(num)
 
 int Router::setTransfers(Transfer **transfers)
 {
-  int numTransfer = 0;
+//  int numTransfer = 0;
   int visited[numCities];
   memset(visited, 0, numCities * sizeof(int));
 //  int levels[numCities];
@@ -52,9 +52,9 @@ int Router::setTransfers(Transfer **transfers)
     {
       for (int i = 0; net > 0 && i < current.adjCount; i++)
       {
-        int process = current.adjList[i];
+        int process;
 
-        if (visited[process] == flag)
+        if (visited[process = current.adjList[i]] == flag)
           continue;
 
 //        curPath[pathLength][0] = i;
@@ -68,18 +68,16 @@ int Router::setTransfers(Transfer **transfers)
 
         adjQ.enqueue(process);	// store city location
         visited[process] = flag;	// lazy flagging
-        int transferAmount = min(getNet(currentParent), -getNet(process));
+//        int transferAmount = min(net, -getNet(process));
+        int transferAmount = min(net, cities[process].usage - cities[process].production);
 
         if (transferAmount <= 0)
-        {
-//          pathLength--;
           continue;
-        }
 
 //        numTransfer += transferAmount * pathLength;	// TODO: check this
   //      transferPath(transfers, currentParent, pathLength, transferAmount);
         net -= transferAmount;
-        numTransfer += transferTo(transfers, currentParent, process, transferAmount);
+        transferTo(transfers, currentParent, process, transferAmount);
 //        pathLength--;	// remove last node from path
       }  // for each adjacency
 
@@ -102,7 +100,7 @@ int Router::setTransfers(Transfer **transfers)
   }  // while more surplus cities
 
   // TODO: recalculate numTransfer
-  return numTransfer;  // should be set to total of all transfers.
+  return getNumTransfer(transfers);  // should be set to total of all transfers.
 }  // setTransfers
 
 // ---PRIVATE---
@@ -142,18 +140,15 @@ void Router::transferPath(Transfer **transfers, int parent, int pathLength, int 
 }  // transferPath()
 */
 
-int Router::transferTo(Transfer **transfers, int parent, int to, int amount)
+void Router::transferTo(Transfer **transfers, int parent, int to, int amount)
 {
-  int transferNum = 0;
   cities[parent].production -= amount;
   cities[to].production += amount;
   while (to != parent)
   {
     getTransfer(transfers, parents[to][1], parents[to][0])->amount += amount;
-    transferNum += amount;
     to = parents[to][1];
   }
-  return transferNum;
 }  // transferTo
 
 Transfer* Router::getTransfer(Transfer **transfers, int from, int toIndex)
@@ -170,6 +165,15 @@ void Router::primeTransfers(Transfer **transfers)
     for (int j = 0; j < cities[i].adjCount; j++)
       getTransfer(transfers, i, j)->destCity = cities[i].adjList[j];
 }
+
+int Router::getNumTransfer(Transfer **transfers)
+{
+  int numTransfer = 0;
+  for (int i = 0; i < numCities; i++)
+    for (int j = 0; j < cities[i].adjCount; j++)
+      numTransfer += getTransfer(transfers, i, j)->amount;
+  return numTransfer;
+}  // getNumTransfer()
 
 void Router::printCities() const
 {

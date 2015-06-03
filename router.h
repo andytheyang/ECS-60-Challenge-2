@@ -20,9 +20,10 @@ private:
 //  void transfer(Transfer **transfers, int from, int toIndex, int amount);	// moves production
 //  void transferPath(Transfer **transfers, int parent, int curPath[MAX_PATH][2], int pathLength, int amount);
 //  void transferPath(Transfer **transfers, int parent, int pathLength, int amount);
-  int transferTo(Transfer **transfers, int parent, int to, int amount);
+  void transferTo(Transfer **transfers, int parent, int to, int amount);
   Transfer* getTransfer(Transfer **transfers, int from, int toIndex);
   void primeTransfers(Transfer **transfers);
+  int getNumTransfer(Transfer **transfers);
   void printCities() const;
   void printTransfer(Transfer **transfers, int city) const;
   void printCurPath(int curPath[MAX_PATH][2], int pathLength) const;
