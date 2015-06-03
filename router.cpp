@@ -14,7 +14,6 @@ Router::Router(CityInfo *info, int num) : numCities(num)
 {
   cities = new CityInfo[numCities];
   memcpy(cities, info, numCities * sizeof(CityInfo));
-    // TODO: duplicate info??
 } // Router()
 
 int Router::setTransfers(Transfer **transfers)
@@ -25,29 +24,33 @@ int Router::setTransfers(Transfer **transfers)
 //  int levels[numCities];
 //  int pathLength = 0;
   Queue<int> surplus(numCities);
-  Queue<int> adjQ(numCities / 2);
+  Queue<int> adjQ(numCities);	// approximate pathlength
   primeTransfers(transfers);
-
+/*
   for (int i = 0; i < numCities; i++)
   {
     if (getNet(i) > 0)
       surplus.enqueue(i);
   }  // for all cities
-
+*/
   int flag = 0;
-  while (!surplus.isEmpty())
+//  while (!surplus.isEmpty())
+//  {
+  for (int currentParent = 0; currentParent < numCities; currentParent++)	// loop until is a surplus, then execute for code
   {
+    if (getNet(currentParent) <= 0)
+      continue;
     flag++;
-    int currentParent = surplus.dequeue();
+//    int currentParent = surplus.dequeue();
     CityInfo current = cities[currentParent];
     int currentNum = currentParent;
     adjQ.makeEmpty();
 //    pathLength = 0;
     parents[currentParent][1] = -1;
-
+    int net = getNet(currentParent);
     do
     {
-      for (int i = 0; getNet(currentParent) > 0 && i < current.adjCount; i++)
+      for (int i = 0; net > 0 && i < current.adjCount; i++)
       {
         int process = current.adjList[i];
 
@@ -75,11 +78,12 @@ int Router::setTransfers(Transfer **transfers)
 
 //        numTransfer += transferAmount * pathLength;	// TODO: check this
   //      transferPath(transfers, currentParent, pathLength, transferAmount);
+        net -= transferAmount;
         numTransfer += transferTo(transfers, currentParent, process, transferAmount);
 //        pathLength--;	// remove last node from path
       }  // for each adjacency
 
-      if (adjQ.isEmpty() || getNet(currentParent) <= 0)
+      if (adjQ.isEmpty() || net <= 0)
         break;
 
       currentNum = adjQ.dequeue();
